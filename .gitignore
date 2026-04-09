@@ -1,0 +1,30 @@
+# Keil 临时文件
+*.uvgui.*
+*.uvopt
+*.uvoptx
+*.uvguix.*
+*.dbgconf
+*.dep
+*.bak
+
+# 编译输出
+*.o
+*.obj
+*.d
+*.lst
+*.m51
+*.map
+*.crf
+*.axf
+*.sct
+*.iex
+*.htm
+*.scvd
+
+# 可执行文件
+*.hex
+*.bin
+
+# 调试配置文件
+*.jlink
+*.ini
