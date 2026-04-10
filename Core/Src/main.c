@@ -131,8 +131,14 @@ int main(void)
             last_update = now;
             // 角度增量 = 角速度 * 时间 (0.001秒)
             theta += SPEED_RAD_S * 0.001f;
-            if(theta >= two_pi) theta -= two_pi;
-            if(theta < 0) theta += two_pi;
+            if(theta >= two_pi) 
+            {
+                theta -= two_pi;
+            }
+            if(theta < 0) 
+            {
+                theta += two_pi;
+            }
 
             update_pwm(theta);
         }
@@ -188,15 +194,23 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 // 将归一化电压（-1~1）转换为PWM比较值
-uint32_t volt_to_compare(float v) {
+uint32_t volt_to_compare(float v)
+{
     int32_t cmp = (int32_t)(PWM_CENTER + v * PWM_CENTER);
-    if(cmp < 0) cmp = 0;
-    if(cmp > PWM_PERIOD) cmp = PWM_PERIOD;
+    if(cmp < 0) 
+    {
+        cmp = 0;
+    }
+    if(cmp > PWM_PERIOD) 
+    {
+        cmp = PWM_PERIOD;
+    }
     return (uint32_t)cmp;
 }
 
 // 更新三相PWM占空比（简单正弦波，互差120度）
-void update_pwm(float angle_el) {
+void update_pwm(float angle_el)
+{
     float ua, ub, uc;
     // 三相正弦波，幅值 VOLTAGE_MAG，偏置0（中心对齐）
     ua = VOLTAGE_MAG * sinf(angle_el);
