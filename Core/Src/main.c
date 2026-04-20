@@ -25,7 +25,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <math.h>
-
+#include "foc_math.h"
+#include "debug.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -130,19 +131,27 @@ int main(void)
         // 每 1ms 更新一次电角度（1000Hz控制频率，足够平滑）
         if(now - last_update >= 1)
         {
-            last_update = now;
-            // 角度增量 = 角速度 * 时间 (0.001秒)
-            theta += SPEED_RAD_S * 0.001f;
-            if(theta >= two_pi)
-            {
-                theta -= two_pi;
-            }
-            if(theta < 0)
-            {
-                theta += two_pi;
-            }
+            Iabc.a = arm_sin_f32(theta);
+            Iabc.b = arm_sin_f32(theta + PI_DIV_3*2.0f );    
+            Iabc.c = arm_sin_f32(theta + PI_DIV_3*2.0f + PI_DIV_3*2.0f); 
+            
+            theta += 0.0009f;
+            Ialphabeta = FOC_Clarke(&Iabc);
+            Iqd = FOC_Park(&Ialphabeta, atan2f(Ialphabeta.beta, Ialphabeta.alpha));
+            Debug_Send();
+//            last_update = now;
+//            // 角度增量 = 角速度 * 时间 (0.001秒)
+//            theta += SPEED_RAD_S * 0.001f;
+//            if(theta >= two_pi)
+//            {
+//                theta -= two_pi;
+//            }
+//            if(theta < 0)
+//            {
+//                theta += two_pi;
+//            }
 
-            update_pwm(theta);
+//            update_pwm(theta);
         }
     }
     /* USER CODE END 3 */
