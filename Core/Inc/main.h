@@ -57,6 +57,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define AMP_IU_Pin GPIO_PIN_6
+#define AMP_IU_GPIO_Port GPIOF
+#define AMP_IV_Pin GPIO_PIN_7
+#define AMP_IV_GPIO_Port GPIOF
+#define AMP_IW_Pin GPIO_PIN_8
+#define AMP_IW_GPIO_Port GPIOF
 
 /* USER CODE BEGIN Private defines */
 
