@@ -2,12 +2,6 @@
 
 
 
-void FOC_PWM_Init()
-{
-
-
-
-}
 
 
 

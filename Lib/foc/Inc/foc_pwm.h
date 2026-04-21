@@ -5,12 +5,12 @@
 
 
 
-typedef struct {
-    PhaseCurrents_t Uabc;
-    PhaseCurrents_t 
-    
-    
-}FOC_PWM_t;
+//typedef struct {
+//    PhaseCurrents_t Uabc;
+//    PhaseCurrents_t 
+//    
+//    
+//}FOC_PWM_t;
 
 
 
