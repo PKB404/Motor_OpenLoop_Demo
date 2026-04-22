@@ -21,7 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "stdio.h"
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -110,6 +110,24 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
+int fputc(int Data, FILE *f)
+{
+    uint8_t data = (uint8_t)Data;
 
+    HAL_UART_Transmit(&huart1, &data, 1, 100);
+
+    return Data;
+}
+
+void USART1_SendBuffer(uint8_t *pDataBuf, uint16_t LenOfData)
+{
+    uint16_t Count;
+
+    for (Count=0; Count<LenOfData; Count++)
+    {
+        printf("%02X", pDataBuf[Count]);
+        printf("\r\n");
+    }
+}
 /* USER CODE END 1 */
 

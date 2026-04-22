@@ -24,7 +24,7 @@ extern PhaseCurrents_t Iabc;
 extern Clarke_ab_t Ialphabeta;
 extern Park_dq_t Iqd;
 
-void Debug_Send(void);
+//void Debug_Send(void);
 
 
 

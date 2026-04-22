@@ -58,8 +58,7 @@
 "openloop\supportfunctionsf16.o"
 "openloop\transformfunctions.o"
 "openloop\transformfunctionsf16.o"
-"openloop\windowfunctions.o"
---strict --scatter "OpenLoop\OpenLoop.sct"
+--library_type=microlib --strict --scatter "OpenLoop\OpenLoop.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "OpenLoop.map" -o OpenLoop\OpenLoop.axf

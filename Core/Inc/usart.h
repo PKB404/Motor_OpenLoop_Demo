@@ -35,12 +35,22 @@ extern "C" {
 extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
+#define DEBUG_PRINTF
+
+#ifdef DEBUG_PRINTF
+	#define DEBUG_Log(format, arg...) 	printf(format,##arg)
+    #define DEBUG_Send 	                USART1_SendBuffer
+#else
+	#define DEBUG_Log(format, arg...) 	((void)0)
+    #define DEBUG_Send 	                ((void)0)
+#endif
 
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void USART1_SendBuffer(uint8_t *pDataBuf, uint16_t LenOfData);
 
 /* USER CODE END Prototypes */
 

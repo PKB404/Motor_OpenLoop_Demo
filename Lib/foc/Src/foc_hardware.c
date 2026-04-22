@@ -4,7 +4,7 @@
 
 
 volatile uint8_t adc_conversion_flag;
-volatile uint16_t adc_buf[ADC_BUFFER_SIZE];
+volatile float adc_buf[ADC_BUFFER_SIZE];
 
 void FOC_PWM_Init(void)
 {
@@ -80,9 +80,9 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef* hadc)
         adc_conversion_flag = 1;
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_11);
         // 读取注入组转换结果 (Rank 1, 2, 3)
-        adc_buf[0] = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
-        adc_buf[1] = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_2);
-        adc_buf[2] = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_3);
+        adc_buf[0] = (hadc->Instance->JDR1 * 3.3f) / 4096;
+        adc_buf[1] = (hadc->Instance->JDR2 * 3.3f) / 4096;
+        adc_buf[2] = (hadc->Instance->JDR3 * 3.3f) / 4096;
 
         
         // 如果使用了规则组+DMA，数据已在 `adc_buf` 中，无需手动读取

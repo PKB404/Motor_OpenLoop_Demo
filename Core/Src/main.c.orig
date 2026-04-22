@@ -125,6 +125,15 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+        if(adc_conversion_flag)
+        {
+            adc_conversion_flag = 0;
+            
+            DEBUG_Log("相线电压：U")
+            
+        }
+
+
 //        uint32_t now = HAL_GetTick();
 //        // 每 1ms 更新一次电角度（1000Hz控制频率，足够平滑）
 //        if(now - last_update >= 1)
