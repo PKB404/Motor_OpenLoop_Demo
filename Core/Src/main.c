@@ -46,7 +46,7 @@
 #define VOLTAGE_MAG    0.25f
 
 // 电角速度（rad/s），控制转速。正值正转，负值反转
-#define SPEED_RAD_S    15.0f
+#define SPEED_RAD_S    90.0f
 
 /* USER CODE END PD */
 
