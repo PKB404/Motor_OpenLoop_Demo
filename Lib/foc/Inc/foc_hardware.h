@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+
+
 #define FOC_DRIVER_TIM          htim1
 #define ADC_BUFFER_SIZE         3
 

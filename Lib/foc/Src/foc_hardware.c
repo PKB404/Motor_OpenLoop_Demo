@@ -27,7 +27,7 @@ void FOC_PWM_Init(void)
 
 void FOC_PWM_DeInit(void)
 {
-    HAL_TIM_Base_Stop_IT(&FOC_DRIVER_TIM);
+//    HAL_TIM_Base_Stop_IT(&FOC_DRIVER_TIM);
 
     HAL_TIM_PWM_Stop(&FOC_DRIVER_TIM, TIM_CHANNEL_1);
     HAL_TIM_PWM_Stop(&FOC_DRIVER_TIM, TIM_CHANNEL_2);
@@ -50,10 +50,19 @@ void FOC_ADC_Init(void)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     //ADC采样相关
-    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
-    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_4, 5240);
+    HAL_TIM_PWM_Start(&FOC_DRIVER_TIM, TIM_CHANNEL_4);
+    __HAL_TIM_SetCompare(&FOC_DRIVER_TIM, TIM_CHANNEL_4, 5240);
     HAL_ADCEx_InjectedStart(&hadc3);
     __HAL_ADC_ENABLE_IT(&hadc3, ADC_IT_JEOC);
+
+}
+
+
+
+void FOC_ADC_DeInit(void)
+{
+    HAL_TIM_PWM_Stop(&FOC_DRIVER_TIM, TIM_CHANNEL_4);
+    HAL_ADCEx_InjectedStop(&hadc3);
 
 }
 
@@ -62,10 +71,10 @@ void FOC_ADC_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    //16Khz进一次(RCR = 1)
+
     if(htim->Instance == FOC_DRIVER_TIM.Instance)
     {
-
+        
     }
 
 }

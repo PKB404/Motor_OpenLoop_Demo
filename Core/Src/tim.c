@@ -31,7 +31,7 @@ void MX_TIM1_Init(void)
 {
 
     /* USER CODE BEGIN TIM1_Init 0 */
-
+    //16KHz，死区时间1.025us
     /* USER CODE END TIM1_Init 0 */
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -95,7 +95,7 @@ void MX_TIM1_Init(void)
     sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
     sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
     sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-    sBreakDeadTimeConfig.DeadTime = 120;
+    sBreakDeadTimeConfig.DeadTime = 150;                        
     sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
     sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
     sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;

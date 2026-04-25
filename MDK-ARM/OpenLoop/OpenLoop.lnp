@@ -26,9 +26,9 @@
 "openloop\stm32f4xx_hal_tim_ex.o"
 "openloop\stm32f4xx_hal_uart.o"
 "openloop\system_stm32f4xx.o"
+"openloop\foc_hardware.o"
 "openloop\foc_math.o"
 "openloop\foc_pwm.o"
-"openloop\foc_hardware.o"
 "openloop\debug.o"
 "openloop\basicmathfunctions.o"
 "openloop\basicmathfunctionsf16.o"
@@ -58,6 +58,7 @@
 "openloop\supportfunctionsf16.o"
 "openloop\transformfunctions.o"
 "openloop\transformfunctionsf16.o"
+"openloop\windowfunctions.o"
 --library_type=microlib --strict --scatter "OpenLoop\OpenLoop.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
