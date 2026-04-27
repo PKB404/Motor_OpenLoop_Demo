@@ -20,6 +20,8 @@
 *.iex
 *.htm
 *.scvd
+*.i
+*.list
 
 # 可执行文件
 *.hex

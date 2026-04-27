@@ -18,8 +18,8 @@ Park_dq_t FOC_Park(Clarke_ab_t *pParam, float angle_el)
 {
     Park_dq_t Output;
 
-    float sin = arm_sin_f32(angle_el);
-    float cos = arm_cos_f32(angle_el);
+    float sin = sinf(angle_el);
+    float cos = cosf(angle_el);
 
     Output.d = pParam->alpha * cos + pParam->beta * sin;
     Output.q = pParam->beta * cos - pParam->alpha * sin;
@@ -46,8 +46,8 @@ Clarke_ab_t FOC_InvPark(Park_dq_t *pParam, float angle_el)
 {
     Clarke_ab_t Output;
 
-    float sin = arm_sin_f32(angle_el);
-    float cos = arm_cos_f32(angle_el);
+    float sin = sinf(angle_el);
+    float cos = cosf(angle_el);
 
     Output.alpha = pParam->d * cos - pParam->q * sin;
     Output.beta = pParam->d * sin + pParam->q *cos;

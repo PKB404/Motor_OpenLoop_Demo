@@ -15,6 +15,8 @@ void FOC_PWM_Init(void);
 
 void FOC_PWM_DeInit(void);
 
+void FOC_PWM_SetCompare(uint32_t ccr1, uint32_t ccr2, uint32_t ccr3);
+
 void FOC_ADC_Init(void);
 
 

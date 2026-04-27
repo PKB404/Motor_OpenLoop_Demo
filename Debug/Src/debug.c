@@ -3,13 +3,13 @@
 #include "foc_type.h"
 
 
-VOFA_Send_Handle_t VOFA_Handle = {
-    .tail = {0x00, 0x00, 0x80, 0x7f},
-};
+//VOFA_Send_Handle_t VOFA_Handle = {
+//    .tail = {0x00, 0x00, 0x80, 0x7f},
+//};
 
-PhaseCurrents_t Iabc;
-Clarke_ab_t Ialphabeta;
-Park_dq_t Iqd;
+//PhaseCurrents_t Iabc;
+//Clarke_ab_t Ialphabeta;
+//Park_dq_t Iqd;
 
 
 

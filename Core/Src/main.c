@@ -27,9 +27,8 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <math.h>
-#include "foc_math.h"
+#include "foc_pwm.h"
 #include "foc_hardware.h"
-#include "debug.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,10 +42,10 @@
 #define PWM_CENTER     2625   // 中心值（50%占空比）
 
 // 电压矢量幅值（0~1之间，小电流建议0.2~0.3）
-#define VOLTAGE_MAG    0.25f
+#define VOLTAGE_MAG    0.5f
 
 // 电角速度（rad/s），控制转速。正值正转，负值反转
-#define SPEED_RAD_S    20.0f
+#define SPEED_RAD_S    50.0f
 
 /* USER CODE END PD */
 
@@ -63,13 +62,25 @@ float theta = 0.0f;           // 当前电角度（0~2PI）
 uint32_t last_update = 0;
 const float two_pi = 6.28318530718f;
 
+FOC_PWM_t g_foc_pwm = {
+    .period = PWM_PERIOD,      // 5250
+    .bus_Voltage = 12.0f,      // 根据实际母线电压设置
+    .angle_el = 0.0f,
+};
+
+// 开环时，设置 Uqd
+Park_dq_t openloop_Uqd = {
+    .d = 0.0f,
+    .q = VOLTAGE_MAG,   // 0.25
+};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-uint32_t volt_to_compare(float v);
-void update_pwm(float angle_el);
+static inline float angle_normalize(float angle);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -130,8 +141,6 @@ int main(void)
         {
             adc_conversion_flag = 0;
 
-            DEBUG_Log("相线电压：U:%.2fV, V:%.2fV, W:%.2fV", adc_buf[0], adc_buf[1], adc_buf[2]);
-
         }
 
 
@@ -139,27 +148,13 @@ int main(void)
 //        // 每 1ms 更新一次电角度（1000Hz控制频率，足够平滑）
         if(now - last_update >= 1)
         {
-////            Iabc.a = arm_sin_f32(theta);
-////            Iabc.b = arm_sin_f32(theta + PI_DIV_3*2.0f );
-////            Iabc.c = arm_sin_f32(theta + PI_DIV_3*2.0f + PI_DIV_3*2.0f);
-
-////            theta += 0.0009f;
-////            Ialphabeta = FOC_Clarke(&Iabc);
-////            Iqd = FOC_Park(&Ialphabeta, atan2f(Ialphabeta.beta, Ialphabeta.alpha));
-////            Debug_Send();
             last_update = now;
             // 角度增量 = 角速度 * 时间 (0.001秒)
             theta += SPEED_RAD_S * 0.001f;
-            if(theta >= two_pi)
-            {
-                theta -= two_pi;
-            }
-            if(theta < 0)
-            {
-                theta += two_pi;
-            }
-
-            update_pwm(theta);
+            
+            theta = angle_normalize(theta);
+            
+            FOC_Run_SPWM(&g_foc_pwm, &openloop_Uqd, theta);
         }
     }
     /* USER CODE END 3 */
@@ -212,34 +207,12 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-// 将归一化电压（-1~1）转换为PWM比较值
-uint32_t volt_to_compare(float v)
+static inline float angle_normalize(float angle)
 {
-    int32_t cmp = (int32_t)(PWM_CENTER + v * PWM_CENTER);
-    if(cmp < 0)
-    {
-        cmp = 0;
-    }
-    if(cmp > PWM_PERIOD)
-    {
-        cmp = PWM_PERIOD;
-    }
-    return (uint32_t)cmp;
-}
-
-// 更新三相PWM占空比（简单正弦波，互差120度）
-void update_pwm(float angle_el)
-{
-    float ua, ub, uc;
-    // 三相正弦波，幅值 VOLTAGE_MAG，偏置0（中心对齐）
-    ua = VOLTAGE_MAG * sinf(angle_el);
-    ub = VOLTAGE_MAG * sinf(angle_el - two_pi / 3.0f);
-    uc = VOLTAGE_MAG * sinf(angle_el - 2.0f * two_pi / 3.0f);
-
-    // update TIM1 compare value
-    TIM1->CCR1 = volt_to_compare(ua);
-    TIM1->CCR2 = volt_to_compare(ub);
-    TIM1->CCR3 = volt_to_compare(uc);
+    const float two_pi = 2.0f * 3.14159265358979323846f;
+    while (angle >= two_pi) angle -= two_pi;
+    while (angle < 0.0f) angle += two_pi;
+    return angle;
 }
 /* USER CODE END 4 */
 

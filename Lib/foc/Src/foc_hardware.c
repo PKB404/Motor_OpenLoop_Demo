@@ -39,6 +39,15 @@ void FOC_PWM_DeInit(void)
 
 
 
+void FOC_PWM_SetCompare(uint32_t ccr1, uint32_t ccr2, uint32_t ccr3)
+{
+    FOC_DRIVER_TIM.Instance->CCR1 = ccr1;
+    FOC_DRIVER_TIM.Instance->CCR2 = ccr2;
+    FOC_DRIVER_TIM.Instance->CCR3 = ccr3;
+}
+
+
+
 void FOC_ADC_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
