@@ -22,6 +22,7 @@
 *.scvd
 *.i
 *.list
+*.txt
 
 # 可执行文件
 *.hex

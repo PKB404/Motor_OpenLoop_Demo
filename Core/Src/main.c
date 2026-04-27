@@ -42,10 +42,10 @@
 #define PWM_CENTER     2625   // 中心值（50%占空比）
 
 // 电压矢量幅值（0~1之间，小电流建议0.2~0.3）
-#define VOLTAGE_MAG    0.5f
+#define VOLTAGE_MAG    0.3f
 
 // 电角速度（rad/s），控制转速。正值正转，负值反转
-#define SPEED_RAD_S    50.0f
+#define SPEED_RAD_S    30.0f
 
 /* USER CODE END PD */
 
@@ -140,7 +140,7 @@ int main(void)
         if(adc_conversion_flag)
         {
             adc_conversion_flag = 0;
-
+            DEBUG_Log("\r\n相线电压：U:%.2fV, V:%.2fV, W:%.2fV", adc_buf[0], adc_buf[1], adc_buf[2]);
         }
 
 
