@@ -14,7 +14,7 @@ typedef struct
     
     float               angle_el;
     float               bus_Voltage;
-    uint32_t            period;
+    uint32_t            wave_period;
     
 }FOC_PWM_t;
 
