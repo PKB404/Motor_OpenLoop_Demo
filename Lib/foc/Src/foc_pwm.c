@@ -138,7 +138,11 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
         
         case 6:
             T1 = y;
-            T2 = -x;        
+            T2 = -x;  
+            break;
+        
+        default:
+            break;        
     }
     
     //限幅处理
