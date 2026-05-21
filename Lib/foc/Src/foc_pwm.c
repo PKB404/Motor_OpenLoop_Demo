@@ -124,6 +124,7 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
         case 3:
             T1 = x;
             T2 = -y;
+            break;
         
         case 4:
             T1 = -x;
@@ -169,6 +170,7 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
             Tabc_1.b = Tabc_0.a;
             Tabc_1.c = Tabc_0.c;
             break;  
+        
 
         case 3:
             Tabc_1.a = Tabc_0.a;
@@ -207,7 +209,6 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
 
 
 
-
 void FOC_Run_SVPWM(FOC_PWM_t *pFOC_PWM)
 {
     uint8_t sector;
@@ -218,6 +219,7 @@ void FOC_Run_SVPWM(FOC_PWM_t *pFOC_PWM)
     
     sector = SectorJudgment(&input);
     VectorActionTime(pFOC_PWM, sector, &input);
+    
     
 }
 
