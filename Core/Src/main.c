@@ -21,6 +21,7 @@
 #include "adc.h"
 #include "tim.h"
 #include "usart.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -29,6 +30,7 @@
 #include <math.h>
 #include "foc_pwm.h"
 #include "foc_hardware.h"
+#include "debug.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,11 +44,11 @@
 #define PWM_CENTER     2625   // 中心值（50%占空比）
 
 // 电压矢量幅值（0~1之间，小电流建议0.2~0.3）
-#define VOLTAGE_MAG    0.3f
+#define VOLTAGE_MAG    0.4f
 
-// 电角速度（rad/s），控制转速。正值正转，负值反转
-#define SPEED_RAD_S    30.0f
 
+#define delta_rad    0.261799f
+#define M_PI            (3.1415926535f)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,12 +63,9 @@
 float theta = 0.0f;           // 当前电角度（0~2PI）
 uint32_t last_update = 0;
 const float two_pi = 6.28318530718f;
+float vofa_floatdata[4] = {0.0f};
 
-FOC_PWM_t g_foc_pwm = {
-    .period = PWM_PERIOD,      // 5250
-    .bus_Voltage = 12.0f,      // 根据实际母线电压设置
-    .angle_el = 0.0f,
-};
+FOC_PWM_t g_foc_pwm;
 
 // 开环时，设置 Uqd
 Park_dq_t openloop_Uqd = {
@@ -79,7 +78,8 @@ Park_dq_t openloop_Uqd = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-static inline float angle_normalize(float angle);
+
+void USB_Reconnection(void);
 
 /* USER CODE END PFP */
 
@@ -112,18 +112,20 @@ int main(void)
     SystemClock_Config();
 
     /* USER CODE BEGIN SysInit */
-
+    
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_TIM1_Init();
     MX_USART1_UART_Init();
-    MX_ADC3_Init();
+//    MX_ADC3_Init();
+    USB_Reconnection();
+    MX_USB_DEVICE_Init();
     /* USER CODE BEGIN 2 */
 
     FOC_PWM_Init();
-    FOC_ADC_Init();
+//    FOC_ADC_Init();
 
     TIM1->BDTR |= TIM_BDTR_MOE;
 
@@ -137,11 +139,11 @@ int main(void)
 
         /* USER CODE BEGIN 3 */
 
-        if(adc_conversion_flag)
-        {
-            adc_conversion_flag = 0;
-            DEBUG_Log("\r\n相线电压：U:%.2fV, V:%.2fV, W:%.2fV", adc_buf[0], adc_buf[1], adc_buf[2]);
-        }
+//        if(adc_conversion_flag)
+//        {
+//            adc_conversion_flag = 0;
+//            DEBUG_Log("\r\n相线电压：U:%.2fV, V:%.2fV, W:%.2fV", adc_buf[0], adc_buf[1], adc_buf[2]);
+//        }
 
 
         uint32_t now = HAL_GetTick();
@@ -150,11 +152,23 @@ int main(void)
         {
             last_update = now;
             // 角度增量 = 角速度 * 时间 (0.001秒)
-            theta += SPEED_RAD_S * 0.001f;
-            
-            theta = angle_normalize(theta);
-            
-            FOC_Run_SPWM(&g_foc_pwm, &openloop_Uqd, theta);
+            theta += 6.283185307f * 0.001f;
+            if (theta > 6.283185307f) {
+                theta -= 6.283185307f;
+            }            
+//            theta = angle_normalize(theta);
+            g_foc_pwm.angle_el = theta;
+//            g_foc_pwm.angle_el = theta * M_PI / 180.0f;
+            g_foc_pwm.bus_Voltage = 12.0f;
+            g_foc_pwm.Uqd.q = VOLTAGE_MAG;
+            g_foc_pwm.Uqd.d = 0.0f;
+            g_foc_pwm.wave_period = 5250 * 2;
+
+            FOC_Run_SVPWM(&g_foc_pwm);
+            vofa_floatdata[0] = g_foc_pwm.Uabc.a;
+            vofa_floatdata[1] = g_foc_pwm.Uabc.b;
+            vofa_floatdata[2] = g_foc_pwm.Uabc.c;
+            Vofa_Send_JustFloat(vofa_floatdata, 3);
         }
     }
     /* USER CODE END 3 */
@@ -184,7 +198,7 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.PLL.PLLM = 4;
     RCC_OscInitStruct.PLL.PLLN = 168;
     RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-    RCC_OscInitStruct.PLL.PLLQ = 4;
+    RCC_OscInitStruct.PLL.PLLQ = 7;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
         Error_Handler();
@@ -207,12 +221,24 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-static inline float angle_normalize(float angle)
+void USB_Reconnection(void)
 {
-    const float two_pi = 2.0f * 3.14159265358979323846f;
-    while (angle >= two_pi) angle -= two_pi;
-    while (angle < 0.0f) angle += two_pi;
-    return angle;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  // 1. 配置 PA12 (USB_D+) 为推挽输出，初始拉低
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;     // 确保默认是低电平
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  // 2. 将 D+ 拉低约 50ms，模拟断开连接
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+  HAL_Delay(50);                             // 50ms 足够主机检测到断开
+
+  // 3. 释放 D+，外部 1.5kΩ 上拉电阻会将其拉高，模拟重新连接
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+  HAL_Delay(50);                             // 等待主机识别新设备
 }
 /* USER CODE END 4 */
 

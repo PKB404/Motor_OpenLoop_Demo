@@ -36,55 +36,28 @@ void FOC_Run_SPWM(FOC_PWM_t *pFOC_PWM, Park_dq_t *pUqd, float angle_el)
 uint8_t SectorJudgment(Clarke_ab_t *pAlphabeta)
 {
     float A = pAlphabeta->beta;
-    float B = SQRT_3 * pAlphabeta->alpha - pAlphabeta->beta;
-    float C = -SQRT_3 * pAlphabeta->alpha - pAlphabeta->beta;
+    float B = SQRT3_DIV_2 * pAlphabeta->alpha - 0.5f *pAlphabeta->beta;
+    float C = -(SQRT3_DIV_2 * pAlphabeta->alpha) - 0.5f * pAlphabeta->beta;
+    static uint8_t sector_map[8] = {0, 2, 6, 1, 4, 3, 5, 0};
     
     uint8_t weight = 0, sector = 0;
     
     if(A > 0)
     {
-        weight += 1;
+        weight |= 1;
     }
     
     if(B > 0)
     {
-        weight += 2;
+        weight |= 2;
     }
     
     if(C > 0)
     {
-        weight += 4;
+        weight |= 4;
     }    
     
-    switch(weight)
-    {
-        case 3:
-            sector = 1;
-            break;
-        
-        case 1:
-            sector = 2;
-            break;
-        
-        case 5:
-            sector = 3;
-            break;
-        
-        case 4:
-            sector = 4;
-            break;
-        
-        case 6:
-            sector = 5;
-            break;
-        
-        case 2:
-            sector = 6;
-            break;
-        
-        default:
-            break;
-    }
+    sector = sector_map[weight];
     return sector;
 }
 
@@ -94,124 +67,251 @@ uint8_t SectorJudgment(Clarke_ab_t *pAlphabeta)
 
 
 
+//static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *pAlphabeta)
+//{
+//    float T0 = 0, T1 = 0, T2 = 0, sum;            /*0矢量的时间，以及扇区的两个相邻矢量的时间*/
+//    float vbus = pFOC_PWM->bus_Voltage;
+//    uint32_t Tpwm = pFOC_PWM->wave_period;
+//    
+//    PhaseCurrents_t Tabc = {0};
+
+//    float tmp = (float)Tpwm * SQRT_3 / vbus;
+//    
+//    float x = tmp * pAlphabeta->beta;
+//    float y = tmp * (SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta * 0.5f);
+//    float z = tmp * (-SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta * 0.5f);
+//    
+//    switch(sector)
+//    {
+//        case 1:
+//            T1 = z;
+//            T2 = y;
+//            break;
+//    
+//        case 2:
+//            T1 = y;
+//            T2 = -x;
+//            break;
+//        
+//        case 3:
+//            T1 = -z;
+//            T2 = x;
+//            break;
+//        
+//        case 4:
+//            T1 = -x;
+//            T2 = z;
+//            break;
+//    
+//        case 5:
+//            T1 = x;
+//            T2 = -y;
+//            break;
+//        
+//        case 6:
+//            T1 = -y;
+//            T2 = -z;  
+//            break;
+//        
+//        default:
+//            T1 = 0;
+//            T1 = 0;
+//            break;        
+//    }
+//    
+//    //限幅处理
+//    sum = T1 + T2;
+//    if(sum > Tpwm)
+//    {
+//        T1 = T1 / sum * Tpwm;
+//        T2 = T2 / sum * Tpwm;
+//        T0 = 0;
+//    }
+//    else
+//    {
+//        T0 = Tpwm - T1 - T2;
+//    }
+//   
+
+//    //参考三相波形图来看，谁先到比较值就给最小的值
+//    switch(sector)
+//    {
+//        case 1:
+//            Tabc.a = T1 + T2 + T0 * 0.5f;
+//            Tabc.b = T2 + T0 * 0.5f;
+//            Tabc.c = T0 * 0.5f;
+//            break;
+//        
+//        case 2:
+//            Tabc.a = T1 + T0 * 0.5f;
+//            Tabc.b = T1 + T2 + T0 * 0.5f;
+//            Tabc.c = T0 * 0.5f;
+//            break;  
+//        
+
+//        case 3:
+//            Tabc.a = T0 * 0.5f;
+//            Tabc.b = T1 + T2 + T0 * 0.5f;
+//            Tabc.c = T2 + T0 * 0.5f;
+//            break;         
+
+//        case 4:
+//            Tabc.a = T0 * 0.5f;
+//            Tabc.b = T1 + T0 * 0.5f;
+//            Tabc.c = T1 + T2 + T0 * 0.5f;
+//            break;
+
+//        case 5:
+//            Tabc.a = T2 + T0 * 0.5f;
+//            Tabc.b = T0 * 0.5f;
+//            Tabc.c = T1 + T2 + T0 * 0.5f;
+//            break;
+//        
+//        case 6:
+//            Tabc.a = T1 + T2 + T0 * 0.5f;
+//            Tabc.b = T0 * 0.5f;
+//            Tabc.c = T1 + T0 * 0.5f;
+//            break;
+//        
+//        default:
+//            Tabc.a = Tabc.b = Tabc.c = T0 * 0.5f;
+//            break;
+//    }
+//    
+//    float cmpA = Tabc.a;
+//    float cmpB = Tabc.b;
+//    float cmpC = Tabc.c;
+//    
+//    
+//    FOC_PWM_SetCompare(cmpA, cmpB, cmpC);
+
+//    pFOC_PWM->Uabc.a = Tabc.a / (float)Tpwm * vbus;
+//    pFOC_PWM->Uabc.b = Tabc.b / (float)Tpwm * vbus;
+//    pFOC_PWM->Uabc.c = Tabc.c / (float)Tpwm * vbus;
+//    
+//}
+
 static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *pAlphabeta)
 {
-    float T0 = 0, T1 = 0, T2 = 0, sum;            /*0矢量的时间，以及扇区的两个相邻矢量的时间*/
     float vbus = pFOC_PWM->bus_Voltage;
     uint32_t Tpwm = pFOC_PWM->wave_period;
     
-    PhaseCurrents_t Tabc_0 = {0};
-    PhaseCurrents_t Tabc_1 = {0};
-
-    float tmp = (float) Tpwm*SQRT_3 / vbus;
+    uint32_t Ta = 0, Tb = 0, Tc = 0;
+    uint32_t T1 = 0, T2 = 0, T3 = 0;
+    uint32_t T4 = 0, T6 = 0, SUM = 0;
+    
+    float tmp = (float)Tpwm * SQRT_3 / vbus;
     
     float x = tmp * pAlphabeta->beta;
-    float y = tmp * (SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta / 2.0f);
-    float z = tmp * (-SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta / 2.0f);
+    float y = tmp * (SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta * 0.5f);
+    float z = tmp * (-SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta * 0.5f);
     
     switch(sector)
     {
         case 1:
-            T1 = -z;
-            T2 = x;
+            T4 = z;
+            T6 = y;
             break;
     
         case 2:
-            T1 = z;
-            T2 = y;
+            T4 = y;
+            T6 = -x;
             break;
         
         case 3:
-            T1 = x;
-            T2 = -y;
+            T4 = -z;
+            T6 = x;
             break;
         
         case 4:
-            T1 = -x;
-            T2 = z;
+            T4 = -x;
+            T6 = z;
             break;
     
         case 5:
-            T1 = -y;
-            T2 = -z;
+            T4 = x;
+            T6 = -y;
             break;
         
         case 6:
-            T1 = y;
-            T2 = -x;  
+            T4 = -y;
+            T6 = -z;  
             break;
         
         default:
+            T4 = 0;
+            T6 = 0;
             break;        
     }
     
     //限幅处理
-    if(T1 + T2 > Tpwm)
+    SUM = T4 + T6;
+    if(SUM > Tpwm)
     {
-        sum = T1 + T2;
-        T1 = T1/sum * Tpwm;
-        T2 = T2/sum * Tpwm;
+        T4 = T4 / SUM * Tpwm;
+        T6 = T6 / SUM * Tpwm;
     }
-    T0 = Tpwm - T1 - T2;
     
-    //相邻矢量和零矢量
-    //T0、T1、T2是各个矢量作用总时间，每个不同的时段，输出的矢量是不同的，到时间点就切换
-    Tabc_0.a = T0/4.0f;
-    Tabc_0.b = Tabc_0.a + T1/2.0f;
-    Tabc_0.c = Tabc_0.b + T2/2.0f; 
+    Ta = (Tpwm - T4 - T6) / 4;
+    Tb = Ta + T4 / 2;
+    Tc = Tb + T6 / 2;
 
     //参考三相波形图来看，谁先到比较值就给最小的值
     switch(sector)
     {
         case 1:
-            Tabc_1.a = Tabc_0.a;
-            Tabc_1.b = Tabc_0.b;
-            Tabc_1.c = Tabc_0.c;
+            T1 = Tb;
+            T2 = Ta;
+            T3 = Tc;
             break;
         
         case 2:
-            Tabc_1.a = Tabc_0.b;
-            Tabc_1.b = Tabc_0.a;
-            Tabc_1.c = Tabc_0.c;
-            break;  
-        
-
-        case 3:
-            Tabc_1.a = Tabc_0.a;
-            Tabc_1.b = Tabc_0.c;
-            Tabc_1.c = Tabc_0.b;
-            break;         
-
-        case 4:
-            Tabc_1.a = Tabc_0.c;
-            Tabc_1.b = Tabc_0.b;
-            Tabc_1.c = Tabc_0.a;
+            T1 = Ta;
+            T2 = Tc;
+            T3 = Tb;
             break;
-
+        
+        case 3:
+            T1 = Ta;
+            T2 = Tb;
+            T3 = Tc;
+            break;
+        
+        case 4:
+            T1 = Tc;
+            T2 = Tb;
+            T3 = Ta;
+            break;
+        
         case 5:
-            Tabc_1.a = Tabc_0.b;
-            Tabc_1.b = Tabc_0.c;
-            Tabc_1.c = Tabc_0.a;
+            T1 = Tc;
+            T2 = Ta;
+            T3 = Tb;
             break;
         
         case 6:
-            Tabc_1.a = Tabc_0.a;
-            Tabc_1.b = Tabc_0.c;
-            Tabc_1.c = Tabc_0.b;
+            T1 = Tb;
+            T2 = Tc;
+            T3 = Ta;
             break;
-
+        
         default:
+            T1 = T2 = T3 = (Tpwm - T4 - T6) / 2;
             break;
     }
-    FOC_PWM_SetCompare(Tabc_1.a, Tabc_1.b, Tabc_1.c);
+    
+    uint32_t cmpA = T1;
+    uint32_t cmpB = T2;
+    uint32_t cmpC = T3;
+    
+    
+    FOC_PWM_SetCompare(cmpA, cmpB, cmpC);
 
-    pFOC_PWM->Uabc.a = Tabc_1.a / (Tpwm / 2.0f) * vbus;
-    pFOC_PWM->Uabc.b = Tabc_1.b / (Tpwm / 2.0f) * vbus;
-    pFOC_PWM->Uabc.c = Tabc_1.c / (Tpwm / 2.0f) * vbus;
+    pFOC_PWM->Uabc.a = T1 / (Tpwm / 2.0f) * vbus;
+    pFOC_PWM->Uabc.b = T2 / (Tpwm / 2.0f) * vbus;
+    pFOC_PWM->Uabc.c = T3 / (Tpwm / 2.0f) * vbus;
     
 }
-
-
 
 void FOC_Run_SVPWM(FOC_PWM_t *pFOC_PWM)
 {

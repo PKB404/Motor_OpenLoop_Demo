@@ -1,31 +1,30 @@
 #include "debug.h"
-#include "usart.h"
-#include "foc_type.h"
-
-
-//VOFA_Send_Handle_t VOFA_Handle = {
-//    .tail = {0x00, 0x00, 0x80, 0x7f},
-//};
-
-//PhaseCurrents_t Iabc;
-//Clarke_ab_t Ialphabeta;
-//Park_dq_t Iqd;
+#include "usbd_cdc_if.h"
 
 
 
-//void Debug_Send(void)
-//{
-//    VOFA_Handle.fdata[0] = Iabc.a;
-//    VOFA_Handle.fdata[1] = Iabc.b;
-//    VOFA_Handle.fdata[2] = Iabc.c;
+/* JustFloat协议帧尾(NaN值: 0x00,0x00,0x80,0x7F) */
+#define VOFA_JUSTFLOAT_TAIL 0x7F800000U /* NaN作为帧尾标记 */
 
-//    VOFA_Handle.fdata[3] = Ialphabeta.alpha + 3;
-//    VOFA_Handle.fdata[4] = Ialphabeta.beta + 3;
-//    
-//    VOFA_Handle.fdata[5] = Iqd.q + 5; 
-//    VOFA_Handle.fdata[6] = Iqd.d + 5;  
+static uint8_t g_tx_buf[VOFA_MAX_CHANNELS * sizeof(float) + sizeof(float)];
 
-//    HAL_UART_Transmit(&huart1, (uint8_t *)&VOFA_Handle, sizeof(VOFA_Handle), 100);    
-//}
-//    
+int Vofa_Send_JustFloat(const float *values, uint8_t count) {
+    uint32_t tail_value;
+    uint32_t offset = 0;
+
+    if (!values || count > VOFA_MAX_CHANNELS) {
+        return -1;
+    }
+
+    memcpy(g_tx_buf, values, count * sizeof(float));
+    offset += count * sizeof(float);
+
+    tail_value = VOFA_JUSTFLOAT_TAIL;
+    memcpy(&g_tx_buf[offset], &tail_value, sizeof(float));
+    offset += sizeof(float);
+
+    cdc_vcp_data_tx(g_tx_buf, (uint32_t)offset);
+    // HAL_UART_Transmit(&huart1, g_tx_buf, offset, 50);
+    return 0;
+} 
 

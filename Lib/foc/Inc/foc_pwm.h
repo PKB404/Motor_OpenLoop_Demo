@@ -35,5 +35,7 @@ typedef struct
 void FOC_Run_SPWM(FOC_PWM_t *pFOC_PWM, Park_dq_t *pUqd, float angle_el);
 
 
+void FOC_Run_SVPWM(FOC_PWM_t *pFOC_PWM);
+
 #endif
 
