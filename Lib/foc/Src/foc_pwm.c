@@ -194,13 +194,13 @@ uint8_t SectorJudgment(Clarke_ab_t *pAlphabeta)
 static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *pAlphabeta)
 {
     float vbus = pFOC_PWM->bus_Voltage;
-    uint32_t Tpwm = pFOC_PWM->wave_period;
+    float Tpwm = (float)pFOC_PWM->wave_period;
     
-    uint32_t Ta = 0, Tb = 0, Tc = 0;
-    uint32_t T1 = 0, T2 = 0, T3 = 0;
-    uint32_t T4 = 0, T6 = 0, SUM = 0;
+    float Ta = 0, Tb = 0, Tc = 0;
+    float T1 = 0, T2 = 0, T3 = 0;
+    float T4 = 0, T6 = 0, SUM = 0;
     
-    float tmp = (float)Tpwm * SQRT_3 / vbus;
+    float tmp = Tpwm * SQRT_3 / vbus;
     
     float x = tmp * pAlphabeta->beta;
     float y = tmp * (SQRT3_DIV_2 * pAlphabeta->alpha + pAlphabeta->beta * 0.5f);
@@ -239,8 +239,8 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
             break;
         
         default:
-            T4 = 0;
-            T6 = 0;
+            T4 = 0.0f;
+            T6 = 0.0f;
             break;        
     }
     
@@ -248,13 +248,13 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
     SUM = T4 + T6;
     if(SUM > Tpwm)
     {
-        T4 = T4 / SUM * Tpwm;
-        T6 = T6 / SUM * Tpwm;
+        T4 = (T4 / SUM) * (Tpwm);
+        T6 = (T6 / SUM) * (Tpwm);
     }
     
-    Ta = (Tpwm - T4 - T6) / 4;
-    Tb = Ta + T4 / 2;
-    Tc = Tb + T6 / 2;
+    Ta = (Tpwm - T4 - T6) * 0.25f;
+    Tb = Ta + T4 * 0.5f;
+    Tc = Tb + T6 * 0.5f;
 
     //参考三相波形图来看，谁先到比较值就给最小的值
     switch(sector)
@@ -296,20 +296,20 @@ static void VectorActionTime(FOC_PWM_t *pFOC_PWM, uint8_t sector, Clarke_ab_t *p
             break;
         
         default:
-            T1 = T2 = T3 = (Tpwm - T4 - T6) / 2;
+            
             break;
     }
     
-    uint32_t cmpA = T1;
-    uint32_t cmpB = T2;
-    uint32_t cmpC = T3;
+    uint16_t cmpA = T1;
+    uint16_t cmpB = T2;
+    uint16_t cmpC = T3;
     
     
     FOC_PWM_SetCompare(cmpA, cmpB, cmpC);
 
-    pFOC_PWM->Uabc.a = T1 / (Tpwm / 2.0f) * vbus;
-    pFOC_PWM->Uabc.b = T2 / (Tpwm / 2.0f) * vbus;
-    pFOC_PWM->Uabc.c = T3 / (Tpwm / 2.0f) * vbus;
+    pFOC_PWM->Uabc.a = ((Tpwm / 2 - Ta) / Tpwm) * vbus;
+    pFOC_PWM->Uabc.b = ((Tpwm / 2 - Tb) / Tpwm) * vbus;
+    pFOC_PWM->Uabc.c = ((Tpwm / 2 - Tc) / Tpwm) * vbus;
     
 }
 

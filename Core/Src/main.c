@@ -147,8 +147,8 @@ int main(void)
 
 
         uint32_t now = HAL_GetTick();
-//        // 每 1ms 更新一次电角度（1000Hz控制频率，足够平滑）
-        if(now - last_update >= 1)
+//        // 每 1ms 更新一次电角度（8000Hz控制频率，足够平滑）
+        if(now != last_update)
         {
             last_update = now;
             // 角度增量 = 角速度 * 时间 (0.001秒)
@@ -160,14 +160,14 @@ int main(void)
             g_foc_pwm.angle_el = theta;
 //            g_foc_pwm.angle_el = theta * M_PI / 180.0f;
             g_foc_pwm.bus_Voltage = 12.0f;
-            g_foc_pwm.Uqd.q = VOLTAGE_MAG;
+            g_foc_pwm.Uqd.q = 1.0f;
             g_foc_pwm.Uqd.d = 0.0f;
-            g_foc_pwm.wave_period = 5250 * 2;
+            g_foc_pwm.wave_period = (htim1.Init.Period + 1) * 2;
 
             FOC_Run_SVPWM(&g_foc_pwm);
-            vofa_floatdata[0] = g_foc_pwm.Uabc.a;
-            vofa_floatdata[1] = g_foc_pwm.Uabc.b;
-            vofa_floatdata[2] = g_foc_pwm.Uabc.c;
+            vofa_floatdata[0] = (float)TIM1->CCR1;
+            vofa_floatdata[1] = (float)TIM1->CCR2;
+            vofa_floatdata[2] = (float)TIM1->CCR3;
             Vofa_Send_JustFloat(vofa_floatdata, 3);
         }
     }
